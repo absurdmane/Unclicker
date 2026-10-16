@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+*.nupkg
+
+# Machine-specific settings (game path)
+local.props
+
+# Logs
+*.log
+
+# IDE / tools
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+.claude/
+
+# Nexus page drafts and images (kept locally)
+nexus/
