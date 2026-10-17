@@ -1,29 +1,38 @@
 # Unclicker for Obenseuer
 
-A BepInEx 6 (Unity Mono) plugin for **Obenseuer**. Recipe buttons that just do the thing: click to plant, craft or start
-a brew, pick the amount with Shift + mouse wheel, see the recipe info on hover. Nothing is written to the game's saves.
+A BepInEx 6 (Unity Mono) plugin for **Obenseuer**. The game makes you click far too much to get anything done: planting
+one bed takes a recipe click, a Plant button, a slider and a confirm, and every ingredient has to be dragged into the station first.
+Unclicker reworks the station UI and UX to cut that to the minimum: one click on a recipe does the job, the amount is set on
+the button, ingredients come straight from your inventory, one button empties a station, and one key harvests a whole bed. Nothing is written to the game's saves.
 
 ## What it does
 
-**Growing devices** (beds, terrariums, flowerpots, ...)
+**One click does what you most likely want**
 
-- Each recipe button shows how many it will plant, e.g. `6× Turnip`. By default that's the most that fits.
-- Click plants right away: no info panel, no Plant button, no popup.
-- Shift + mouse wheel over the button changes the amount; Shift + click opens the vanilla amount popup.
+- Bed, terrarium, flowerpot: click a recipe and it plants as many as fit. No info panel, no Plant button, no slider.
+- Workstation: click a recipe and it crafts one.
+- Brewing barrel, distillery: click a recipe and it starts the biggest batch the ingredients allow.
+- No need to load the station first: ingredients come straight from your inventory; leftovers and empty bottles come back.
+- Done? One **Take all** button moves everything from the station into your inventory.
 
-**Workstations** (Craft buttons): a click on the recipe crafts one, like the Craft button.
+**When you want something else**
 
-**Batch processes** (brewing, distilling, ...)
+- The amount is right on the button: `6× Turnip`, `5L Kilju`.
+- Shift + mouse wheel over the button changes it before you click.
+- Shift + click on a growing recipe opens the vanilla amount slider.
+- Hover a recipe to see its info, with totals for the chosen amount.
 
-- The button shows the batch first, in liters for liquids, e.g. `5L Kilju`. By default it is the vanilla maximum.
-- Shift + mouse wheel changes the batch; click starts it.
+**Farming**
 
-**Everywhere**
+- Shift + E on a bed or terrarium harvests every ripe plant into your inventory; a **Harvest all** button does the same in the panel
+  (on Linked Terrariums, the whole group). Dead plants are cleared too. When your inventory fills up it stops; the rest stays on the plants.
+- A click on a plant cell in the panel puts the harvest into your inventory instead of the bed's storage.
+- Planting uses up the worst items first: lowest quality, then the least fresh. The good ones stay for you.
+- A dead plant is removed with a press, not a hold.
 
-- Recipe info shows on hover, with totals for the chosen amount, and updates as you scroll.
-- Ingredients in your inventory count too: they move into the station on start, and what's left over (and empty bottles) comes back.
-- A **Take all** button on station panels moves everything from the station into your inventory.
-- The info popup's own Craft / Plant / Start button is hidden, since a click on the recipe already does it.
+**Stays out of the way**
+
+- The popup's own Craft / Plant / Start button is hidden, since the click on the recipe already does it.
 - A plain mouse wheel still scrolls the recipe list. Missing ingredients, no power or wrong conditions: the click does nothing, as in vanilla.
 
 ## Install
@@ -41,6 +50,14 @@ a brew, pick the amount with Shift + mouse wheel, see the recipe info on hover. 
 | Panels | `TakeAllButton` | `true` | the Take all button (needs a restart) |
 | | `HideCreateButton` | `true` | hide the popup's Craft / Plant / Start button |
 | Ingredients | `FromInventory` | `true` | stations also use ingredients from your inventory |
+| Farming | `HarvestAll` | `true` | ModifierKey + interact on a growing device harvests everything ripe |
+| | `HarvestAllHint` | `true` | the "harvest all" hint under the device's name |
+| | `HarvestAllButton` | `true` | the Harvest all button in the growing panel (needs a restart) |
+| | `HarvestDeadPlants` | `true` | harvest all also clears dead plants |
+| | `Overflow` | `StopWhenFull` | `StopWhenFull` / `DropRest` (drop what doesn't fit) |
+| | `CellHarvestToPlayer` | `true` | a click on a plant cell harvests into your inventory |
+| | `PlantingOrder` | `WorstFirst` | `WorstFirst` / `Vanilla` (slot order) |
+| | `InstantDeadRemoval` | `true` | dead plants go with a press |
 | Mod | `Enabled` | `true` | off = no patches, everything as in vanilla (needs a restart) |
 
 ## Compatibility
@@ -48,6 +65,8 @@ a brew, pick the amount with Shift + mouse wheel, see the recipe info on hover. 
 - **Inventory Tweaks**: its "Shift + click plants the max" is replaced on growing devices, since Shift + click opens the
   amount popup here. Its other features keep working.
 - **Craft From Storage**: should work together; amounts count the items it pulls from storage.
+- **Linked Terrariums**: on a linked terrarium the amount counts the seeds and free slots of the whole group, and one click
+  plants across it.
 - Gamepad: not changed.
 
 When reporting a problem, please attach `BepInEx/LogOutput.log` and say which station and recipe.

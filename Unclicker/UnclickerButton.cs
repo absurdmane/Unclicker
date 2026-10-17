@@ -34,7 +34,9 @@ namespace Unclicker
                 {
                     case Growing growing when kind == StationKind.Growing:
                         hasAmount = true;
-                        max = Mathf.Min(growing.GetRecipeMultiplier(button.recipe), growing.FreeGrowingSlotCount());
+                        max = LinkedTerrariums.IsLinked(growing)
+                            ? LinkedTerrariums.Max(button.recipe)
+                            : Mathf.Min(growing.GetRecipeMultiplier(button.recipe), growing.FreeGrowingSlotCount());
                         break;
                     case manufacturingProcess process when kind == StationKind.Process
                                                            && process.stage == manufacturingProcess.Stage.LoadingItems:
@@ -45,6 +47,17 @@ namespace Unclicker
             }
             amount = max;
             UpdateLabel();
+        }
+
+        /// <summary>Takes our part off every recipe button: the label loses its amount.</summary>
+        public static void UnloadAll()
+        {
+            foreach (UnclickerButton b in FindObjectsByType<UnclickerButton>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (b.label != null)
+                    b.label.text = b.baseText;
+                Destroy(b);
+            }
         }
 
         public void OnScroll(PointerEventData eventData)

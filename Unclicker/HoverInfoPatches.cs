@@ -71,6 +71,20 @@ namespace Unclicker
             }
         }
 
+        /// <summary>Puts the info popup back as the game made it: create bar shown, rows area at its size, our helpers gone.</summary>
+        public static void Unload()
+        {
+            foreach (RowsArea r in Object.FindObjectsByType<RowsArea>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (r.bar != null)
+                    r.bar.gameObject.SetActive(true);
+                r.Extend(false);
+                Object.Destroy(r);
+            }
+            foreach (DelayedHide d in Object.FindObjectsByType<DelayedHide>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                Object.Destroy(d);
+        }
+
         /// <summary>
         /// The scroll area of the recipe rows ends where the create bar begins. With the bar hidden, its bottom edge moves down by the
         /// bar's height so the rows fill the freed space; it moves back when the bar shows again.
@@ -78,7 +92,7 @@ namespace Unclicker
         private sealed class RowsArea : MonoBehaviour
         {
             private RectTransform area;
-            private RectTransform bar;
+            internal RectTransform bar;
             private Vector2 originalOffsetMin;
             private bool extended;
 

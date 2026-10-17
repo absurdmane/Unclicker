@@ -1,14 +1,14 @@
 # Unclicker — test plan
 
 Build and install: `dotnet build -c Release -p:Deploy=true` in `Unclicker/` (copies the dll to `BepInEx\plugins\Unclicker`).
-Log: `BepInEx\LogOutput.log` — look for `Unclicker 1.0.0 loaded` and any exceptions mentioning `Unclicker`.
+Log: `BepInEx\LogOutput.log` — look for `Unclicker 1.1.0 loaded` and any exceptions mentioning `Unclicker`.
 Config: `BepInEx\config\obenseuer.absurdmane.unclicker.cfg` (created on the first run).
 
 Mark each line: OK / FAIL + a note. "Shift" below means the configured `ModifierKey` (default LeftShift).
 
 ## 0. Startup
 
-- [ ] The game starts, the log has `Unclicker 1.0.0 loaded`, no errors.
+- [ ] The game starts, the log has `Unclicker 1.1.0 loaded`, no errors.
 - [ ] The config file exists, with `Stations` (Growing, Manufacturing, ManufacturingProcess) and `Controls` (ModifierKey).
 
 ## 1. Growing (bed, terrarium, flowerpot)
@@ -106,3 +106,15 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 ## 6. Gamepad (out of scope, just check nothing breaks)
 
 - [ ] Recipe selection and the vanilla buttons still work with a gamepad.
+
+## Farming
+
+- [ ] Shift + E on a bed with ripe plants: all go to the inventory, unripe ones stay; with nothing ripe the bed opens.
+- [ ] The use text shows the harvest-all hint only when something is ripe or dead.
+- [ ] Multi-harvest plants: fruit picked, the bush stays. Dead plants cleared.
+- [ ] Full inventory: stops, a notification says how many plants are left; nothing lost. DropRest: the rest drops at your feet.
+- [ ] Harvest all button: visible left of Take all, harvests the panel's device; on Linked Terrariums the whole group.
+- [ ] Click on a plant cell: harvest goes to the inventory; with a full inventory into the terrarium's storage.
+- [ ] Worst first: mixed-quality seeds/produce in a bed and the inventory, plant: the worst are used, the best stay.
+- [ ] Dead plant: a press removes it, the hint says "Uproot dead plant"; a live unripe plant still needs a hold.
+- [ ] Animal cages (also Growing): Shift + E feels right or needs excluding.

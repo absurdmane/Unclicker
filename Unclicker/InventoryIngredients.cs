@@ -20,9 +20,14 @@ namespace Unclicker
     {
         private static bool pulling;
 
+        /// <remarks>
+        /// Only while the station holds its own storage: Linked Terrariums briefly swaps in a neighbour's storage to count and plant
+        /// from it, and the player's stacks must not be counted or pulled once per neighbour.
+        /// </remarks>
         private static bool Applies(CraftingBase station) =>
             Plugin.IngredientsFromInventory.Value && station != null && station == CraftingBase.currentCraftingBase &&
-            Stations.KindOf(station) != StationKind.None && station.InputOutputStorage != null && Inventory.instance != null;
+            Stations.KindOf(station) != StationKind.None && station.InputOutputStorage != null && Inventory.instance != null &&
+            station.InputOutputStorage == station.GetComponent<Storage>();
 
         // ---- listing and counting ----
 
@@ -87,14 +92,19 @@ namespace Unclicker
             public Dictionary<int, int> Before;
         }
 
+        /// <remarks>First, so the seeds are in before Linked Terrariums' prefix plants across its group.</remarks>
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow))]
         private static void StartGrowPrefix(Growing __instance, ref int amount, out Pull __state)
         {
             __state = PullIn(__instance, __instance.selectedRecipe);
-            if (__state != null)
-                amount = System.Math.Max(1, System.Math.Min(amount,
-                    System.Math.Min(__instance.GetRecipeMultiplier(__instance.selectedRecipe), __instance.FreeGrowingSlotCount())));
+            if (__state == null)
+                return;
+            int max = LinkedTerrariums.IsLinked(__instance)
+                ? LinkedTerrariums.Max(__instance.selectedRecipe)
+                : System.Math.Min(__instance.GetRecipeMultiplier(__instance.selectedRecipe), __instance.FreeGrowingSlotCount());
+            amount = System.Math.Max(1, System.Math.Min(amount, max));
         }
 
         [HarmonyFinalizer]
@@ -129,8 +139,8 @@ namespace Unclicker
         /// <summary>Moves the player's stacks that fit the recipe into the station. Null when nothing moved.</summary>
         private static Pull PullIn(CraftingBase station, Recipe recipe)
         {
-            pulling = false;
-            if (recipe == null || !Applies(station))
+            // Nested start (Linked Terrariums plants each member through its own StartGrow): the outer call already pulled.
+            if (pulling || recipe == null || !Applies(station))
                 return null;
             SlotController[] stationSlots = station.InputOutputStorage.Slots;
             if (stationSlots == null || stationSlots.Length == 0)
@@ -151,9 +161,9 @@ namespace Unclicker
 
         private static void PutBack(CraftingBase station, Pull pull)
         {
-            pulling = false;
             if (pull == null)
                 return;
+            pulling = false;
             try
             {
                 Dictionary<int, int> now = Count(station);

@@ -9,7 +9,7 @@
     <Authors>absurdmane</Authors>
     <Company>absurdmane</Company>
     <Product>Unclicker</Product>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <DebugType>embedded</DebugType>
@@ -36,6 +36,7 @@
     <Reference Include="$(ManagedDir)\Assembly-CSharp-firstpass.dll" Publicize="true" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(ManagedDir)\UnityEngine.AudioModule.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.InputLegacyModule.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.UI.dll" Private="false" />
     <Reference Include="$(ManagedDir)\UnityEngine.UIModule.dll" Private="false" />
@@ -43,8 +44,18 @@
   </ItemGroup>
 
   <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
+    <Delete Files="$(GameDir)\BepInEx\scripts\Unclicker\Unclicker.dll;$(GameDir)\BepInEx\scripts\Unclicker\Unclicker.pdb" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\BepInEx\plugins\Unclicker" />
     <Message Importance="high" Text="Unclicker -> $(GameDir)\BepInEx\plugins\Unclicker" />
+  </Target>
+
+  <!-- Development: -p:Deploy=scripts puts the dll into BepInEx\scripts, where the DevMenu tool loads it and reloads it on F10
+       without restarting the game. The copy in plugins is removed so the mod isn't loaded twice. -->
+  <Target Name="DeployToScripts" AfterTargets="Build" Condition="'$(Deploy)' == 'scripts'">
+    <Delete Files="$(GameDir)\BepInEx\plugins\Unclicker\Unclicker.dll" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\BepInEx\scripts\Unclicker" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(GameDir)\BepInEx\scripts\Unclicker" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Message Importance="high" Text="Unclicker -> $(GameDir)\BepInEx\scripts\Unclicker (press the reload key in game)" />
   </Target>
 
 </Project>
