@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- New: autoloot. Middle-click an item to mark it with a star; containers outside your tenement hand marked items to you when you open them. Items that belong to someone are left alone.
+
 ## 1.2.0
 
 - New: Take All and Harvest buttons on station and bed panels.

@@ -1,14 +1,14 @@
 # Unclicker — test plan
 
 Build and install: `dotnet build -c Release -p:Deploy=true` in `Unclicker/` (copies the dll to `BepInEx\plugins\Unclicker`).
-Log: `BepInEx\LogOutput.log` — look for `Unclicker 1.2.0 loaded` and any exceptions mentioning `Unclicker`.
+Log: `BepInEx\LogOutput.log` — look for `Unclicker 1.3.0 loaded` and any exceptions mentioning `Unclicker`.
 Config: `BepInEx\config\obenseuer.absurdmane.unclicker.cfg` (created on the first run).
 
 Mark each line: OK / FAIL + a note. "Shift" below means the configured `ModifierKey` (default LeftShift).
 
 ## 0. Startup
 
-- [ ] The game starts, the log has `Unclicker 1.2.0 loaded`, no errors.
+- [ ] The game starts, the log has `Unclicker 1.3.0 loaded`, no errors.
 - [ ] The config file exists, with `Stations` (Growing, Manufacturing, ManufacturingProcess) and `Controls` (ModifierKey).
 
 ## 1. Growing (bed, terrarium, flowerpot)
@@ -120,3 +120,13 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] Worst first: mixed-quality seeds/produce in a bed and the inventory, plant: the worst are used, the best stay.
 - [ ] Dead plant: a press removes it, the hint says "Uproot dead plant"; a live unripe plant still needs a hold.
 - [ ] Animal cages (also Growing): Shift + E feels right or needs excluding.
+## Autoloot
+
+- [ ] Middle click on an item (own inventory or an open container): a gold star appears on every stack of it; again: it goes.
+- [ ] The star does not cover the amount, quality or the game's own upgrade marker; it stays right after a scene change and a mod reload.
+- [ ] The list survives a game restart (`[Autoloot] Items` in the config).
+- [ ] A container outside the tenement with a listed item: opening it moves the item into the inventory, the panel shows it gone.
+- [ ] Containers in the tenement (own fridge, shelves): nothing moves.
+- [ ] Owned items (a shop's or a resident's container): not taken, no crime.
+- [ ] Full inventory: what doesn't fit stays in the container, nothing dropped.
+- [ ] Trade panels and station storages: nothing moves.

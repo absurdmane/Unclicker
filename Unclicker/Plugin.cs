@@ -12,8 +12,9 @@ namespace Unclicker
     {
         public const string Guid = "obenseuer.absurdmane.unclicker";
         public const string Name = "Unclicker";
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
 
+        internal static Plugin Instance;
         internal static ManualLogSource Log;
         internal static Harmony Harmony;
 
@@ -33,9 +34,13 @@ namespace Unclicker
         internal static ConfigEntry<bool> CellHarvestToPlayer;
         internal static ConfigEntry<PlantingOrder> PlantOrder;
         internal static ConfigEntry<bool> InstantDeadRemoval;
+        internal static ConfigEntry<bool> AutolootEnabled;
+        internal static ConfigEntry<string> AutolootItems;
+        internal static ConfigEntry<KeyCode> AutolootKey;
 
         private void Awake()
         {
+            Instance = this;
             Log = Logger;
 
             Growing = Config.Bind("Stations", "Growing", true,
@@ -77,6 +82,14 @@ namespace Unclicker
             InstantDeadRemoval = Config.Bind("Farming", "InstantDeadRemoval", true,
                 "A dead plant is removed with a press instead of a hold. Uprooting a live plant stays a hold.");
 
+            AutolootEnabled = Config.Bind("Autoloot", "Enabled", true,
+                "MarkKey on an item in an inventory panel adds its kind to the autoloot list (again: removes it). Opening a container " +
+                "outside the tenement takes those items into your inventory, except ones that would be stolen.");
+            AutolootKey = Config.Bind("Autoloot", "MarkKey", KeyCode.Mouse2,
+                "Press over an item to mark it for autoloot or unmark it. Mouse2 = middle mouse button.");
+            AutolootItems = Config.Bind("Autoloot", "Items", "",
+                "Item IDs on the autoloot list, comma-separated. Filled by MarkKey.");
+
             Enabled = Config.Bind("Mod", "Enabled", true,
                 "Off = the mod does nothing at all: no patches, everything as in vanilla. Needs a game restart.");
             if (!Enabled.Value)
@@ -91,8 +104,15 @@ namespace Unclicker
             Harmony.PatchAll(typeof(TakeAllButton));
             Harmony.PatchAll(typeof(InventoryIngredients));
             Harmony.PatchAll(typeof(Farming));
+            Harmony.PatchAll(typeof(Autoloot));
             TakeAllButton.AddToExisting();
             Log.LogInfo($"{Name} {Version} loaded");
+        }
+
+        private void Update()
+        {
+            if (Harmony != null)
+                Autoloot.Update();
         }
 
         // Undoes everything the mod did, so a fresh copy can be loaded next to it (DevMenu's script reload).
@@ -105,6 +125,7 @@ namespace Unclicker
             TakeAllButton.Unload();
             HoverInfoPatches.Unload();
             UnclickerButton.UnloadAll();
+            Autoloot.Unload();
         }
     }
 }

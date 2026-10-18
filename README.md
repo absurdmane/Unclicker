@@ -30,6 +30,12 @@ the button, ingredients come straight from your inventory, one button empties a 
 - Planting uses up the worst items first: lowest quality, then the least fresh. The good ones stay for you.
 - A dead plant is removed with a press, not a hold.
 
+**Autoloot**
+
+- Middle-click an item in any inventory panel to mark it with a star; middle-click again to unmark it.
+- Open a container outside your tenement and the marked items move into your inventory.
+- Items that belong to someone stay where they are, so autoloot never steals. What doesn't fit stays in the container.
+
 **Stays out of the way**
 
 - The popup's own Craft / Plant / Start button is hidden, since the click on the recipe already does it.
@@ -58,6 +64,9 @@ the button, ingredients come straight from your inventory, one button empties a 
 | | `CellHarvestToPlayer` | `true` | a click on a plant cell harvests into your inventory |
 | | `PlantingOrder` | `WorstFirst` | `WorstFirst` / `Vanilla` (slot order) |
 | | `InstantDeadRemoval` | `true` | dead plants go with a press |
+| Autoloot | `Enabled` | `true` | middle click marks items, containers outside the tenement hand them over |
+| | `MarkKey` | `Mouse2` | the key that marks items (middle mouse button) |
+| | `Items` | empty | the marked item IDs, filled by middle clicks |
 | Mod | `Enabled` | `true` | off = no patches, everything as in vanilla (needs a restart) |
 
 ## Compatibility
