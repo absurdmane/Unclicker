@@ -13,7 +13,7 @@ the button, ingredients come straight from your inventory, one button empties a 
 - Workstation: click a recipe and it crafts one.
 - Brewing barrel, distillery: click a recipe and it starts the biggest batch the ingredients allow.
 - No need to load the station first: ingredients come straight from your inventory; leftovers and empty bottles come back.
-- Done? One round **Take All** button moves everything from the station into your inventory.
+- Done? One **Take All** button moves everything from the station into your inventory.
 
 **When you want something else**
 
@@ -24,7 +24,7 @@ the button, ingredients come straight from your inventory, one button empties a 
 
 **Farming**
 
-- Shift + E on a bed or terrarium harvests every ripe plant into your inventory; a round **Harvest** button does the same in the panel
+- Shift + E on a bed or terrarium harvests every ripe plant into your inventory; a **Harvest** button does the same in the panel
   (on Linked Planters, the whole group). Dead plants are cleared too. When your inventory fills up it stops; the rest stays on the plants.
 - A click on a plant cell in the panel puts the harvest into your inventory instead of the bed's storage.
 - Planting uses up the worst items first: lowest quality, then the least fresh. The good ones stay for you.

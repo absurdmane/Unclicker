@@ -2,7 +2,7 @@
 
 ## 1.2.0
 
-- New: round Take All and Harvest buttons on station and bed panels.
+- New: Take All and Harvest buttons on station and bed panels.
 - Works with Linked Planters (the new name of Linked Terrariums).
 - Compatible with Craft From Storage.
 - Fixed: Harvest all dropped items on the floor when your inventory was full; now they stay on the plants.
