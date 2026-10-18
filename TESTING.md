@@ -1,14 +1,14 @@
 # Unclicker — test plan
 
 Build and install: `dotnet build -c Release -p:Deploy=true` in `Unclicker/` (copies the dll to `BepInEx\plugins\Unclicker`).
-Log: `BepInEx\LogOutput.log` — look for `Unclicker 1.1.1 loaded` and any exceptions mentioning `Unclicker`.
+Log: `BepInEx\LogOutput.log` — look for `Unclicker 1.2.0 loaded` and any exceptions mentioning `Unclicker`.
 Config: `BepInEx\config\obenseuer.absurdmane.unclicker.cfg` (created on the first run).
 
 Mark each line: OK / FAIL + a note. "Shift" below means the configured `ModifierKey` (default LeftShift).
 
 ## 0. Startup
 
-- [ ] The game starts, the log has `Unclicker 1.1.1 loaded`, no errors.
+- [ ] The game starts, the log has `Unclicker 1.2.0 loaded`, no errors.
 - [ ] The config file exists, with `Stations` (Growing, Manufacturing, ManufacturingProcess) and `Controls` (ModifierKey).
 
 ## 1. Growing (bed, terrarium, flowerpot)

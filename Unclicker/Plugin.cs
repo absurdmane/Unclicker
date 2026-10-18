@@ -12,7 +12,7 @@ namespace Unclicker
     {
         public const string Guid = "obenseuer.absurdmane.unclicker";
         public const string Name = "Unclicker";
-        public const string Version = "1.1.1";
+        public const string Version = "1.2.0";
 
         internal static ManualLogSource Log;
         internal static Harmony Harmony;

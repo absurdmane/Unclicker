@@ -1,15 +1,11 @@
 # Changelog
 
-## 1.1.1
+## 1.2.0
 
-- Fixed: with Craft From Storage, stations kept the containers' slots in their own inventory after
-  every recipe check. They piled up: opening a station took longer and longer, memory kept growing, and the bloated station
-  went into the save.
-- Fixed: the Take all and Harvest all buttons were invisible on every panel. They are now small round Take All and Harvest
-  buttons in the style of the inventory's Sort button, tucked into the corner of the station's inventory.
-- Harvest all no longer drops what doesn't fit. Everything that fits your inventory is harvested, plant by plant and fruit
-  by fruit; the rest stays on the plants (`Overflow = StopWhenFull`).
-- Linked Terrariums is now Linked Planters: its group support is found under the new name too.
+- New: round Take All and Harvest buttons on station and bed panels.
+- Works with Linked Planters (the new name of Linked Terrariums).
+- Compatible with Craft From Storage.
+- Fixed: Harvest all dropped items on the floor when your inventory was full; now they stay on the plants.
 
 ## 1.1.0
 

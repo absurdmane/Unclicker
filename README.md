@@ -64,7 +64,7 @@ the button, ingredients come straight from your inventory, one button empties a 
 
 - **Inventory Tweaks**: its "Shift + click plants the max" is replaced on growing devices, since Shift + click opens the
   amount popup here. Its other features keep working.
-- **Craft From Storage**: amounts count the items it pulls from storage. Needs 1.1.1 or later:
+- **Craft From Storage**: amounts count the items it pulls from storage. Needs 1.2.0 or later:
   1.1.0 bloated stations with it (slow opening, growing memory, carried into saves).
 - **Linked Planters** (formerly Linked Terrariums): on a linked planter the amount counts the seeds and free slots of the whole group, and one click
   plants across it.

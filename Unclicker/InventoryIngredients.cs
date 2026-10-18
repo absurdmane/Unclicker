@@ -63,14 +63,45 @@ namespace Unclicker
             if (pulling || !Applies(station))
                 return null;
             StorageSlot[] own = station.InputOutputStorage.storageSlots;
-            List<StorageSlot> extra = PlayerSlots()
-                .Select(s => Copy(s.itemStack))
-                .ToList();
-            if (extra.Count == 0)
+            // The same array while the player's stacks are the same (a recipe list runs dozens of checks): Craft From Storage
+            // caches its own widening by the array it gets, and a new one each time makes it rescan every container per recipe.
+            int player = PlayerFingerprint();
+            if (widenedOwn != own || widenedPlayer != player)
+            {
+                List<StorageSlot> extra = PlayerSlots()
+                    .Select(s => Copy(s.itemStack))
+                    .ToList();
+                widened = extra.Count == 0 ? null : own.Concat(extra).ToArray();
+                widenedOwn = own;
+                widenedPlayer = player;
+            }
+            if (widened == null)
                 return null;
-            station.InputOutputStorage.storageSlots = own.Concat(extra).ToArray();
+            station.InputOutputStorage.storageSlots = widened;
             return own;
         }
+
+        private static StorageSlot[] widened;
+        private static StorageSlot[] widenedOwn;
+        private static int widenedPlayer;
+
+        /// <summary>Changes whenever a player stack appears, goes or changes amount.</summary>
+        private static int PlayerFingerprint()
+        {
+            unchecked
+            {
+                int hash = 17;
+                foreach (SlotController slot in Inventory.instance.Slots)
+                {
+                    ItemStack stack = slot?.itemStack;
+                    hash = hash * 31 + (stack == null ? 0 : (stack.itemId * 397) ^ stack.itemAmount ^ stack.GetHashCode());
+                }
+                return hash;
+            }
+        }
+
+        /// <summary>After we move items ourselves: the next check builds the widening anew.</summary>
+        private static void ForgetWidened() => widened = widenedOwn = null;
 
         private static void Restore(CraftingBase station, StorageSlot[] original)
         {
@@ -155,6 +186,7 @@ namespace Unclicker
             if (stationSlots == null || stationSlots.Length == 0)
                 return null;
 
+            ForgetWidened();
             var pull = new Pull { Before = Count(station) };
             int moved = 0;
             foreach (SlotController slot in PlayerSlots().Where(s => Fits(recipe, s.itemStack)).ToList())
@@ -173,6 +205,7 @@ namespace Unclicker
             if (pull == null)
                 return;
             pulling = false;
+            ForgetWidened();
             try
             {
                 Dictionary<int, int> now = Count(station);

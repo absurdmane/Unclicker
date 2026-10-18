@@ -9,7 +9,7 @@
     <Authors>absurdmane</Authors>
     <Company>absurdmane</Company>
     <Product>Unclicker</Product>
-    <Version>1.1.1</Version>
+    <Version>1.2.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <DebugType>embedded</DebugType>
@@ -50,7 +50,7 @@
   </Target>
 
   <!-- Development: -p:Deploy=scripts puts the dll into BepInEx\scripts, where the DevMenu tool loads it and reloads it from
-       Tools > Reload scripts without restarting the game. The copy in plugins is removed so the mod isn't loaded twice. -->
+       Tools > Reload changed without restarting the game. The copy in plugins is removed so the mod isn't loaded twice. -->
   <Target Name="DeployToScripts" AfterTargets="Build" Condition="'$(Deploy)' == 'scripts'">
     <Delete Files="$(GameDir)\BepInEx\plugins\Unclicker\Unclicker.dll" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\BepInEx\scripts\Unclicker" />
