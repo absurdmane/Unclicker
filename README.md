@@ -36,6 +36,12 @@ the button, ingredients come straight from your inventory, one button empties a 
 - Open a container outside your tenement and the marked items move into your inventory.
 - Items that belong to someone stay where they are, so autoloot never steals. What doesn't fit stays in the container.
 
+**Quick move by sweeping**
+
+- Hold Left Alt and move the mouse over items: each stack moves between your inventory and the open container or station,
+  as with a double-click. Clothes, backpack and hand slots are left alone.
+- Not in trade, bottle recycling or liquid storage.
+
 **Stays out of the way**
 
 - The popup's own Craft / Plant / Start button is hidden, since the click on the recipe already does it.
@@ -67,6 +73,8 @@ the button, ingredients come straight from your inventory, one button empties a 
 | Autoloot | `Enabled` | `true` | middle click marks items, containers outside the tenement hand them over |
 | | `MarkKey` | `Mouse2` | the key that marks items (middle mouse button) |
 | | `Items` | empty | the marked item IDs, filled by middle clicks |
+| QuickMovePaint | `Enabled` | `true` | hold the key and sweep over items to quick-move them |
+| | `Key` | `LeftAlt` | the key to hold |
 | Mod | `Enabled` | `true` | off = no patches, everything as in vanilla (needs a restart) |
 
 ## Compatibility

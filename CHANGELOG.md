@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- New: quick move by sweeping. Hold Left Alt and move the mouse over items: each stack moves between your inventory and the open container or station, as with a double-click. Not in trade, bottle recycling or liquid storage.
+
 ## 1.3.0
 
 - New: autoloot. Middle-click an item to mark it with a star; containers outside your tenement hand marked items to you when you open them. Items that belong to someone are left alone.

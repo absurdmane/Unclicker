@@ -130,3 +130,25 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] Owned items (a shop's or a resident's container): not taken, no crime.
 - [ ] Full inventory: what doesn't fit stays in the container, nothing dropped.
 - [ ] Trade panels and station storages: nothing moves.
+
+## Quick-move paint
+
+"Alt" below means `[QuickMovePaint] Key` (default LeftAlt).
+
+- [ ] Container open, hold Alt and sweep over several inventory items: each stack goes into the container, whole stack.
+- [ ] The other way: sweep over the container's items: they go into the inventory.
+- [ ] One stroke never moves items back: start in the inventory, then sweep into the container panel: nothing comes back.
+      Release Alt and press again: now the other side can be moved.
+- [ ] The item under the cursor when Alt is pressed moves at once.
+- [ ] Fast sweep across a row: no slot in between is skipped.
+- [ ] Container full: the rest stays where it was, no flicker, no error.
+- [ ] Holding a mouse button with Alt: vanilla drag / double-click / hold-move work as usual, painting pauses; after release it
+      continues from the current cursor position (slots passed while the button was held stay untouched).
+- [ ] Crafting station and growing device open: items move into the station's storage and back.
+- [ ] Clothes, backpack and hand slots: never moved.
+- [ ] Trade, bottle recycling, liquid storage (barrel, tap): nothing happens.
+- [ ] Plain inventory (nothing open), without Backpack In Inventory: nothing happens, clothes are not put on.
+- [ ] With Backpack In Inventory, nothing open: main ↔ backpack, one direction per stroke; clothes and tools are not put on.
+- [ ] Alt+Tab out and back: no painting until Alt is pressed again; Alt doesn't stay "stuck".
+- [ ] One move sound per frame, not a burst.
+- [ ] `Enabled = false`: nothing; `Key = RightAlt` (or another key): follows the new key.

@@ -12,7 +12,7 @@ namespace Unclicker
     {
         public const string Guid = "obenseuer.absurdmane.unclicker";
         public const string Name = "Unclicker";
-        public const string Version = "1.3.0";
+        public const string Version = "1.4.0";
 
         internal static Plugin Instance;
         internal static ManualLogSource Log;
@@ -37,6 +37,8 @@ namespace Unclicker
         internal static ConfigEntry<bool> AutolootEnabled;
         internal static ConfigEntry<string> AutolootItems;
         internal static ConfigEntry<KeyCode> AutolootKey;
+        internal static ConfigEntry<bool> PaintEnabled;
+        internal static ConfigEntry<KeyCode> PaintKey;
 
         private void Awake()
         {
@@ -90,6 +92,12 @@ namespace Unclicker
             AutolootItems = Config.Bind("Autoloot", "Items", "",
                 "Item IDs on the autoloot list, comma-separated. Filled by MarkKey.");
 
+            PaintEnabled = Config.Bind("QuickMovePaint", "Enabled", true,
+                "Hold Key and move the mouse over items: each one is quick-moved, whole stack, between your inventory and the open container " +
+                "or station. Not in trade, bottle recycling or liquid storage; clothes and hand slots are left alone.");
+            PaintKey = Config.Bind("QuickMovePaint", "Key", KeyCode.LeftAlt,
+                "Hold to quick-move every item the mouse passes over.");
+
             Enabled = Config.Bind("Mod", "Enabled", true,
                 "Off = the mod does nothing at all: no patches, everything as in vanilla. Needs a game restart.");
             if (!Enabled.Value)
@@ -111,8 +119,10 @@ namespace Unclicker
 
         private void Update()
         {
-            if (Harmony != null)
-                Autoloot.Update();
+            if (Harmony == null)
+                return;
+            Autoloot.Update();
+            QuickMovePaint.Update();
         }
 
         // Undoes everything the mod did, so a fresh copy can be loaded next to it (DevMenu's script reload).
@@ -126,6 +136,7 @@ namespace Unclicker
             HoverInfoPatches.Unload();
             UnclickerButton.UnloadAll();
             Autoloot.Unload();
+            QuickMovePaint.Unload();
         }
     }
 }
