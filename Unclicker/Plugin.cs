@@ -12,7 +12,7 @@ namespace Unclicker
     {
         public const string Guid = "obenseuer.absurdmane.unclicker";
         public const string Name = "Unclicker";
-        public const string Version = "1.1.0";
+        public const string Version = "1.1.1";
 
         internal static ManualLogSource Log;
         internal static Harmony Harmony;
@@ -67,9 +67,9 @@ namespace Unclicker
             HarvestDeadPlants = Config.Bind("Farming", "HarvestDeadPlants", true,
                 "Harvest all also clears dead plants (you get what uprooting gives).");
             Overflow = Config.Bind("Farming", "Overflow", HarvestOverflow.StopWhenFull,
-                "When your inventory fills up during harvest all. StopWhenFull: stop before a plant whose harvest doesn't fit, the rest stays " +
-                "on the plants. DropRest: keep going and drop what doesn't fit at your feet. From the panel, what doesn't fit you goes " +
-                "into the device's storage first, as in vanilla.");
+                "When your inventory fills up during harvest all. StopWhenFull: everything that fits your inventory is harvested, plant by " +
+                "plant and fruit by fruit; a plant whose whole harvest doesn't fit stays as it is. DropRest: harvest everything and drop " +
+                "what doesn't fit at your feet (from the panel: into the device's storage first, as in vanilla).");
             CellHarvestToPlayer = Config.Bind("Farming", "CellHarvestToPlayer", true,
                 "A click on a plant cell in the growing panel puts the harvest into your inventory when it fits (vanilla: into the device's storage).");
             PlantOrder = Config.Bind("Farming", "PlantingOrder", PlantingOrder.WorstFirst,

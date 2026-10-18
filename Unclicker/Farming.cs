@@ -49,7 +49,6 @@ namespace Unclicker
         {
             int harvested = 0;
             int left = 0;
-            bool full = false;
             foreach (Growing device in devices)
             {
                 if (device == null || device.GrowingSlots == null)
@@ -59,18 +58,16 @@ namespace Unclicker
                     Ripeness ripeness = RipenessOf(spot, out grow plant);
                     if (ripeness == Ripeness.None)
                         continue;
-                    if (full || !HarvestPlant(device, spot, plant, ripeness, fromPanel))
-                    {
-                        full = true;
+                    // Every plant gets its try: a smaller harvest may still fit after a bigger one didn't.
+                    if (HarvestPlant(device, spot, plant, ripeness, fromPanel))
+                        harvested++;
+                    else
                         left++;
-                        continue;
-                    }
-                    harvested++;
                 }
                 device.StartCoroutine(device.UpdateItemsInProgressDelayed());
             }
 
-            if (full)
+            if (left > 0)
             {
                 UseText.instance?.WarningUseEffect();
                 Notifications.instance?.CreateNotification("Inventory full", $"{left} plant{(left == 1 ? "" : "s")} left to harvest");
@@ -105,11 +102,8 @@ namespace Unclicker
 
                 case Ripeness.Ripe:
                 case Ripeness.Dead:
-                    IEnumerable<grow.ItemAmount> expected = ripeness == Ripeness.Dead
-                        ? plant.uprootItems
-                        : plant.grownItems.Concat(new[] { plant.seedItem });
-                    if (Plugin.Overflow.Value == HarvestOverflow.StopWhenFull && !expected.All(a => Fits(a, plant.ownerId, device, fromPanel)))
-                        return false;
+                    if (Plugin.Overflow.Value == HarvestOverflow.StopWhenFull && !FitsAll(plant, ripeness == Ripeness.Dead))
+                        return false; // stays on the plant
                     List<ItemStack> stacks = plant.HarvestExternal(out bool destroy);
                     foreach (ItemStack stack in stacks)
                         Deliver(stack, device, fromPanel);
@@ -120,28 +114,40 @@ namespace Unclicker
                 case Ripeness.Collectible:
                     CollectibleItem collectible = spot.Plant.GetComponentInChildren<CollectibleItem>();
                     Item item = collectible.Item.Item;
+                    if (Plugin.Overflow.Value == HarvestOverflow.StopWhenFull && FreeSlots() < SlotsFor(item, collectible.amount))
+                        return false; // stays on the plant
                     if (fromPanel)
                         device.CreateItems(Enumerable.Repeat(item, collectible.amount).ToList());
-                    else if (Plugin.Overflow.Value == HarvestOverflow.StopWhenFull && !Inventory.instance.InventoryIsNotFull(item, -1, collectible.amount))
-                        return false;
                     else
-                        ItemOperations.AddItemsAndDropRemaining(item, amount: collectible.amount);
+                    {
+                        int rest = AddToPlayer(item, collectible.amount, -1, null);
+                        if (rest > 0)
+                            ItemOperations.DropItem(item, rest);
+                    }
                     spot.HarvestPlant();
                     return true;
             }
             return true;
         }
 
-        /// <summary>The game's pick-all on the plant root, but only fruit that fits: the game adds fruit straight to the player.</summary>
+        /// <summary>
+        /// The game's pick-all on the plant root, but only fruit that fits: the game adds fruit straight to the player. False when some
+        /// fruit had to stay on the plant.
+        /// </summary>
         private static bool PickFruit(grow plant)
         {
             int picked = 0;
+            bool skipped = false;
             foreach (GrowItem fruit in plant.visibleGrownItems)
             {
                 if (fruit == null || !fruit.gameObject.activeInHierarchy || !fruit.readyToPick)
                     continue;
-                if (!Inventory.instance.InventoryIsNotFull(fruit.item.item.Item, plant.ownerId, fruit.itemAmount, 1, fruit.meta))
-                    return false;
+                // The game adds the fruit itself and drops what doesn't fit.
+                if (FreeSlots() < SlotsFor(fruit.item.item.Item, fruit.itemAmount))
+                {
+                    skipped = true;
+                    continue;
+                }
                 fruit.GetItem();
                 fruit.ToggleVisibility(vis: false);
                 fruit.ResetGrow();
@@ -154,33 +160,53 @@ namespace Unclicker
                 else
                     RandomAudioLibrary.instance?.harvest.PlayRandomClip(plant.gameObject);
             }
-            return true;
+            return !skipped;
         }
 
-        private static bool Fits(grow.ItemAmount amount, int owner, Growing device, bool fromPanel)
+        /// <summary>
+        /// The plant's whole harvest fits in free slots. The most it can give: grown items scale with Age / FullGrownAge, over 1 on an
+        /// overgrown plant.
+        /// </summary>
+        private static bool FitsAll(grow plant, bool dead)
         {
-            Item item = amount?.item?.Item;
-            if (item == null || amount.amount.y <= 0)
-                return true;
-            if (Inventory.instance.InventoryIsNotFull(item, owner, amount.amount.y))
-                return true;
-            Storage storage = device.OutputStorage ?? device.InputOutputStorage;
-            return fromPanel && storage != null && storage.CheckIfEmpty(item);
+            float age = Mathf.Max(1f, plant.Age / (float)Mathf.Max(1, plant.FullGrownAge));
+            IEnumerable<(grow.ItemAmount Amount, float Scale)> amounts = dead
+                ? plant.uprootItems.Select(a => (a, 1f))
+                : plant.grownItems.Select(a => (a, age)).Append((plant.seedItem, 1f));
+            int needed = amounts
+                .Where(x => x.Amount?.item?.Item != null && x.Amount.amount.y > 0)
+                .Sum(x => SlotsFor(x.Amount.item.Item, Mathf.CeilToInt(x.Amount.amount.y * x.Scale)));
+            return needed <= FreeSlots();
         }
 
-        /// <summary>Into the player's inventory when it all fits; otherwise the device's storage (panel) or the player plus the floor.</summary>
+        /// <summary>
+        /// Slots an amount needs, counted as if it can't stack onto what the player has: harvested items get their own quality.
+        /// </summary>
+        private static int SlotsFor(Item item, int amount) => Mathf.CeilToInt(amount / (float)Mathf.Max(1, item.Stackable));
+
+        /// <summary>Empty slots of the main inventory: not the backpack, not the equipment slots.</summary>
+        private static int FreeSlots() => Inventory.instance.GetEmptySlotsAmount(ignoreBackpack: true, ignoreCharacterSlots: true);
+
+        /// <summary>
+        /// Into the player's main inventory. What still doesn't fit goes into the device's storage (panel) or onto the floor.
+        /// </summary>
         private static void Deliver(ItemStack stack, Growing device, bool fromPanel)
         {
             Item item = stack?.itemReference?.Item;
             if (item == null || stack.itemAmount <= 0)
                 return;
-            if (Inventory.instance.InventoryIsNotFull(item, stack.ownerId, stack.itemAmount, 1, stack.Meta))
-                ItemOperations.AddItems(stack);
-            else if (fromPanel)
-                device.CreateItems(new List<ItemStack> { stack });
+            int rest = AddToPlayer(item, stack.itemAmount, stack.ownerId, stack.Meta);
+            if (rest <= 0)
+                return;
+            if (fromPanel)
+                device.CreateItems(new List<ItemStack> { ItemStack.CreateStackFromItem(item, rest, stack.ownerId, stack.Meta) });
             else
-                ItemOperations.AddItemsAndDropRemaining(item, stack.ownerId, null, stack.Meta, stack.itemAmount);
+                ItemOperations.DropItem(item, rest, stack.ownerId, stack.Meta);
         }
+
+        /// <summary>Into the player's main inventory; returns what didn't fit.</summary>
+        private static int AddToPlayer(Item item, int amount, int owner, object[] meta) =>
+            ItemOperations.AddItemAndReturnRemaining(item, owner, null, meta, amount);
 
         // ---- Shift + interact on the device ----
 

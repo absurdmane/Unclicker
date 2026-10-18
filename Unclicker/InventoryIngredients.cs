@@ -31,20 +31,29 @@ namespace Unclicker
 
         // ---- listing and counting ----
 
+        // Other mods widen the same array the same way (Obenseuer Modding Framework adds containers for Craft From Storage).
+        // Harmony runs finalizers in the same order as prefixes, not in reverse, so at equal priority the swaps don't nest:
+        // one side restores to the other's temporary array and it sticks in the station (and in the save), growing with every
+        // call. We stay outermost on both ends: our prefix first, our finalizer last.
+
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(CraftingBase), "CountItems")]
         private static void CountItemsPrefix(CraftingBase __instance, out StorageSlot[] __state) => __state = Widen(__instance);
 
         [HarmonyFinalizer]
+        [HarmonyPriority(Priority.Last)]
         [HarmonyPatch(typeof(CraftingBase), "CountItems")]
         private static void CountItemsFinalizer(CraftingBase __instance, StorageSlot[] __state) => Restore(__instance, __state);
 
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(CraftingBase), "CompareRecipeToItems")]
         private static void ComparePrefix(CraftingBase __instance, ItemStack[] items, out StorageSlot[] __state) =>
             __state = items == null ? Widen(__instance) : null;
 
         [HarmonyFinalizer]
+        [HarmonyPriority(Priority.Last)]
         [HarmonyPatch(typeof(CraftingBase), "CompareRecipeToItems")]
         private static void CompareFinalizer(CraftingBase __instance, StorageSlot[] __state) => Restore(__instance, __state);
 

@@ -14,7 +14,12 @@ namespace Unclicker
     /// </summary>
     internal static class LinkedTerrariums
     {
-        private const string Guid = "LinkedTerrariums";
+        // Renamed to Linked Planters in its 1.1.0 (GUID and namespace); the old name is still found for older installs.
+        private static readonly (string Guid, string Namespace, string Links)[] Variants =
+        {
+            ("LinkedPlanters", "LinkedPlanters", "PlanterLinks"),
+            ("LinkedTerrariums", "LinkedTerrariums", "TerrariumLinks")
+        };
 
         private static bool resolved;
         private static Func<Growing, bool> isActiveGroup;
@@ -111,13 +116,21 @@ namespace Unclicker
             if (resolved)
                 return;
             resolved = true;
-            if (!UnityChainloader.Instance.Plugins.TryGetValue(Guid, out var info) || info.Instance == null)
+            BepInEx.PluginInfo info = null;
+            (string Guid, string Namespace, string Links) variant = default;
+            foreach (var v in Variants)
+                if (UnityChainloader.Instance.Plugins.TryGetValue(v.Guid, out info) && info.Instance != null)
+                {
+                    variant = v;
+                    break;
+                }
+            if (info?.Instance == null)
                 return;
             try
             {
                 var asm = info.Instance.GetType().Assembly;
-                Type links = asm.GetType("LinkedTerrariums.TerrariumLinks");
-                Type planting = asm.GetType("LinkedTerrariums.Planting");
+                Type links = asm.GetType($"{variant.Namespace}.{variant.Links}");
+                Type planting = asm.GetType($"{variant.Namespace}.Planting");
                 isActiveGroup = AccessTools.MethodDelegate<Func<Growing, bool>>(AccessTools.Method(links, "IsActiveGroup"));
                 totalSeeds = AccessTools.MethodDelegate<Func<Recipe, int>>(AccessTools.Method(planting, "TotalSeeds"));
                 totalFreeSlots = AccessTools.MethodDelegate<Func<Recipe, int>>(AccessTools.Method(planting, "TotalFreeSlots"));
@@ -125,7 +138,7 @@ namespace Unclicker
                 active = AccessTools.Field(links, "Active");
                 open = AccessTools.MethodDelegate<Action<Growing>>(AccessTools.Method(links, "Open"));
                 close = AccessTools.MethodDelegate<Action<Growing>>(AccessTools.Method(links, "Close"));
-                Plugin.Log.LogInfo("Linked Terrariums found: amounts on linked terrariums count the whole group.");
+                Plugin.Log.LogInfo($"{info.Metadata.Name} found: amounts on linked devices count the whole group.");
             }
             catch (Exception e)
             {
