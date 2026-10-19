@@ -128,7 +128,8 @@ namespace Unclicker
         private static void EnterPostfix(Storage __instance)
         {
             if (!Plugin.AutolootEnabled.Value || Pool.Count == 0 || SceneManager.GetActiveScene().name == TenementScene ||
-                __instance.GetComponent<CraftingBase>() != null || __instance.Slots == null || __instance.Slots.Length == 0)
+                __instance.GetComponent<CraftingBase>() != null || __instance.Slots == null || __instance.Slots.Length == 0 ||
+                __instance.GetComponent<TenementResourceStorage>() != null)
                 return;
             // A frame later, when the panel shows the container's slots: moving items then updates them on screen.
             Plugin.Instance.StartCoroutine(LootNextFrame(__instance));
