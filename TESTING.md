@@ -29,7 +29,8 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] After planting, the list rebuilds and N is back at the new max.
 - [ ] Shift + click opens the vanilla amount popup. "Plant" plants the chosen amount. Is there a Cancel button? (note it)
 - [ ] With exactly one free slot, Shift + click plants at once (vanilla behaviour).
-- [ ] Bed full (0 free slots): no amount, click does nothing, no error.
+- [ ] Bed full (0 free slots): every recipe button looks like "missing ingredients", no amount, click does nothing, no error.
+      On Linked Planters only when the whole group is full.
 - [ ] Recipe with missing ingredients / skill too low (red/grey button): click does nothing, hover still shows info.
 - [ ] Recipe whose conditions the device doesn't meet (red required / excluded modifiers in the hover info): the button looks
       like "missing ingredients", no amount, click does nothing.

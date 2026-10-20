@@ -15,6 +15,7 @@ namespace Unclicker
         /// <summary>
         /// A recipe whose conditions the station doesn't meet (required / excluded modifiers) gets the vanilla "can't make" button.
         /// Vanilla lists it as a normal button and only greys out the popup's create button, which we hide.
+        /// Same for a growing device with no free spot.
         /// </summary>
         [HarmonyPrefix]
         [HarmonyPatch(typeof(RecipeListUI), nameof(RecipeListUI.CreateButton))]
@@ -23,6 +24,10 @@ namespace Unclicker
             if (disabled || missingIngredients || recipe == null || Stations.KindOf(activeCraftingBase) == StationKind.None)
                 return;
             if (!RecipeInfoUI.CheckModifiers(recipe, activeCraftingBase.ModifiersWithUpgrades))
+                missingIngredients = true;
+            // A growing device with no free spot (the whole group on Linked Planters): nothing can be planted.
+            else if (activeCraftingBase is Growing growing && Stations.KindOf(growing) == StationKind.Growing &&
+                     (LinkedTerrariums.IsLinked(growing) ? LinkedTerrariums.Max(recipe) : growing.FreeGrowingSlotCount()) <= 0)
                 missingIngredients = true;
         }
 
