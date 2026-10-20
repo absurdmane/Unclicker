@@ -5,7 +5,7 @@
 - New: the icon strip on station panels (quality, capacity, upgrades, conditions) sits above the slots, where a running craft's info popup no longer covers it. Setting `[Panels] ModifiersAboveSlots`.
 - New: Take all and Harvest are small round icon buttons with a tooltip.
 - Recipes the station can't make (conditions not met) look unavailable and show no amount. On a full bed, recipe buttons look unavailable too.
-- Ingredients come straight from your inventory with no limit by the station's slots: a 100 L mash barrel no longer starts with only 5 L. Emptied bottles stay in your inventory.
+- Ingredients come straight from your inventory with no limit by the station's slots. Emptied bottles stay in your inventory.
 - Fixed: Harvest all refused to harvest while there was room. It now counts the room in your existing stacks and in a worn backpack.
 - Fixed: autoloot emptied a worn backpack, rucksack or cooler bag, and the Tenement Resources chest. It leaves them alone now.
 
