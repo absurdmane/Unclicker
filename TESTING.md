@@ -128,6 +128,10 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] The use text shows the harvest-all hint only when something is ripe or dead.
 - [ ] Multi-harvest plants: fruit picked, the bush stays. Dead plants cleared.
 - [ ] Full inventory: stops, a notification says how many plants are left; nothing lost. DropRest: the rest drops at your feet.
+- [ ] Free slots only in the worn backpack: the harvest goes there instead of stopping.
+- [ ] Few free slots but stacks of the same produce in the inventory (e.g. onions): the harvest tops them up and goes on; a plant
+      that gives several items (juniper: berries, branches, wood) still stops when they can't fit. If a stack of another quality
+      doesn't merge, note where the rest went (floor / bed storage).
 - [ ] Harvest button (round, smaller text that fits): left of Take All, harvests the panel's device; on Linked Planters the whole group.
 - [ ] Click on a plant cell: harvest goes to the inventory; with a full inventory into the terrarium's storage.
 - [ ] Worst first: mixed-quality seeds/produce in a bed and the inventory, plant: the worst are used, the best stay.

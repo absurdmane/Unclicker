@@ -164,8 +164,8 @@ namespace Unclicker
         }
 
         /// <summary>
-        /// The plant's whole harvest fits in free slots. The most it can give: grown items scale with Age / FullGrownAge, over 1 on an
-        /// overgrown plant.
+        /// The plant's whole harvest fits: the most it can give, per item, first topping up the player's stacks of that item, the rest in
+        /// free slots. Grown items scale with Age / FullGrownAge (at most 1 in practice).
         /// </summary>
         private static bool FitsAll(grow plant, bool dead)
         {
@@ -175,17 +175,31 @@ namespace Unclicker
                 : plant.grownItems.Select(a => (a, age)).Append((plant.seedItem, 1f));
             int needed = amounts
                 .Where(x => x.Amount?.item?.Item != null && x.Amount.amount.y > 0)
-                .Sum(x => SlotsFor(x.Amount.item.Item, Mathf.CeilToInt(x.Amount.amount.y * x.Scale)));
+                .GroupBy(x => x.Amount.item.Item.ID)
+                .Sum(g => SlotsFor(g.First().Amount.item.Item, g.Sum(x => Mathf.CeilToInt(x.Amount.amount.y * x.Scale))));
             return needed <= FreeSlots();
         }
 
         /// <summary>
-        /// Slots an amount needs, counted as if it can't stack onto what the player has: harvested items get their own quality.
+        /// Free slots an amount needs after topping up the player's stacks of the same item (main inventory and backpack). Assumes they
+        /// merge; one that doesn't (another quality) goes where the harvest's overflow goes.
         /// </summary>
-        private static int SlotsFor(Item item, int amount) => Mathf.CeilToInt(amount / (float)Mathf.Max(1, item.Stackable));
+        private static int SlotsFor(Item item, int amount)
+        {
+            int stackable = Mathf.Max(1, item.Stackable);
+            foreach (SlotController slot in Inventory.instance.AllSlots(ignoreBackpack: false, ignoreCharacterSlots: true))
+            {
+                ItemStack stack = slot?.itemStack;
+                if (amount <= 0)
+                    break;
+                if (stack != null && stack.itemId == item.ID && stack.itemAmount > 0 && stack.itemAmount < stackable)
+                    amount -= stackable - stack.itemAmount;
+            }
+            return amount <= 0 ? 0 : Mathf.CeilToInt(amount / (float)stackable);
+        }
 
-        /// <summary>Empty slots of the main inventory: not the backpack, not the equipment slots.</summary>
-        private static int FreeSlots() => Inventory.instance.GetEmptySlotsAmount(ignoreBackpack: true, ignoreCharacterSlots: true);
+        /// <summary>Empty slots of the main inventory and the worn backpack (the harvest overflows into it), not the equipment slots.</summary>
+        private static int FreeSlots() => Inventory.instance.GetEmptySlotsAmount(ignoreBackpack: false, ignoreCharacterSlots: true);
 
         /// <summary>
         /// Into the player's main inventory. What still doesn't fit goes into the device's storage (panel) or onto the floor.
