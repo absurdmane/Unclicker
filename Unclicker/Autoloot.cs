@@ -129,7 +129,7 @@ namespace Unclicker
         {
             if (!Plugin.AutolootEnabled.Value || Pool.Count == 0 || SceneManager.GetActiveScene().name == TenementScene ||
                 __instance.GetComponent<CraftingBase>() != null || __instance.Slots == null || __instance.Slots.Length == 0 ||
-                __instance.GetComponent<TenementResourceStorage>() != null)
+                IsBackpack(__instance) || __instance.GetComponent<TenementResourceStorage>() != null)
                 return;
             // A frame later, when the panel shows the container's slots: moving items then updates them on screen.
             Plugin.Instance.StartCoroutine(LootNextFrame(__instance));
@@ -157,6 +157,14 @@ namespace Unclicker
             }
             if (looted)
                 storage.storageChanged = true;
+        }
+
+        /// <summary>The worn backpack, rucksack or cooler bag: the player's own storage, opened like a container.</summary>
+        private static bool IsBackpack(Storage storage)
+        {
+            BackpackStorage backpacks = BackpackStorage.instance;
+            return backpacks != null && (storage == backpacks.backpackStorage || storage == backpacks.rucksackStorage ||
+                                         storage == backpacks.coolerBagStorage);
         }
 
         /// <summary>The game's own rule (<c>Inventory.CheckForAddedStolenItems</c>): an owned stack without the owner's permission.</summary>

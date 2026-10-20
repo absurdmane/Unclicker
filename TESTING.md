@@ -128,6 +128,7 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] A container outside the tenement with a listed item: opening it moves the item into the inventory, the panel shows it gone.
 - [ ] Containers in the tenement (own fridge, shelves): nothing moves.
 - [ ] The tenement resource chest (Contract Work, `TenementResourceStorage`): nothing moves.
+- [ ] The worn backpack / rucksack / cooler bag opened outside the tenement: nothing moves out of it.
 - [ ] Owned items (a shop's or a resident's container): not taken, no crime.
 - [ ] Full inventory: what doesn't fit stays in the container, nothing dropped.
 - [ ] Trade panels and station storages: nothing moves.
