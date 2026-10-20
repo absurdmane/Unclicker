@@ -9,7 +9,7 @@
     <Authors>absurdmane</Authors>
     <Company>absurdmane</Company>
     <Product>Unclicker</Product>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <DebugType>embedded</DebugType>

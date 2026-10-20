@@ -35,6 +35,7 @@ the button, ingredients come straight from your inventory, one button empties a 
 - Middle-click an item in any inventory panel to mark it with a star; middle-click again to unmark it.
 - Open a container outside your tenement and the marked items move into your inventory.
 - Items that belong to someone stay where they are, so autoloot never steals. What doesn't fit stays in the container.
+- A worn backpack, rucksack or cooler bag, and the Tenement Resources chest, are left alone.
 
 **Quick move by sweeping**
 
@@ -46,6 +47,8 @@ the button, ingredients come straight from your inventory, one button empties a 
 
 - The popup's own Craft / Plant / Start button is hidden, since the click on the recipe already does it.
 - A plain mouse wheel still scrolls the recipe list. Missing ingredients, no power or wrong conditions: the click does nothing, as in vanilla.
+- Recipes the station can't make look unavailable and show no amount, also on a full bed.
+- The icon strip on station panels (quality, capacity, upgrades, conditions) sits above the slots. Take All and Harvest are small round icon buttons with a tooltip.
 
 ## Install
 
@@ -61,6 +64,7 @@ the button, ingredients come straight from your inventory, one button empties a 
 | Controls | `ModifierKey` | `LeftShift` | hold for the mouse wheel amount and Shift + click |
 | Panels | `TakeAllButton` | `true` | the Take All button (needs a restart) |
 | | `HideCreateButton` | `true` | hide the popup's Craft / Plant / Start button |
+| | `ModifiersAboveSlots` | `true` | the icon strip (quality, capacity, upgrades, conditions) above the slot grid instead of below it |
 | Ingredients | `FromInventory` | `true` | stations also use ingredients from your inventory |
 | Farming | `HarvestAll` | `true` | ModifierKey + interact on a growing device harvests everything ripe |
 | | `HarvestAllHint` | `true` | the "harvest all" hint under the device's name |
