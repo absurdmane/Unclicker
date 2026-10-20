@@ -65,6 +65,19 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] Brewing barrel while processing / ready: the panel still has Abort / Fill.
 - [ ] `HideCreateButton = false`: the button is back.
 
+## 3e. Modifier strip above the slots
+
+- [ ] Mashing tun, stove, workbench, bed, terrarium: the strip of station icons (quality, capacity, upgrades, conditions) is above
+      the slot grid, the grid right under it, nothing overlaps; the log says "Modifiers strip on ...: moved" or why it was left.
+- [ ] A running craft (Abort in the info popup): the strip stays fully visible.
+- [ ] Take all (and Harvest on beds) sit at the right end of the strip, centred on its height, not over the icons; buttons 10%
+      smaller than Sort, labels still fit. Icons at 0.8 size, aligned left in the strip, tooltips still work.
+- [ ] The buttons show icons (arrow into a tray, hand pulling a carrot), no text; hovering shows the game's tooltip
+      ("Take all" / "Harvest all", title only), with the hover sound of the modifier icons.
+- [ ] A station with many slots (scrolling grid): strip and buttons stay in place while scrolling.
+- [ ] `ModifiersAboveSlots = false` (restart): vanilla layout, buttons over the grid's corner as before.
+- [ ] Mod reload: strip and grid go back, then move again.
+
 ## 3a. Take all button
 
 - [ ] A workbench, a stove, a brewing barrel and a bed panel each show a round "Take All" button at the slot grid's top-right corner. Note where it

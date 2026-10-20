@@ -43,9 +43,11 @@ namespace Unclicker
             {
                 RectTransform takeAll = Find(panel, TakeAllName);
                 if (Plugin.TakeAll.Value && takeAll == null)
-                    takeAll = Create(panel, TakeAllName, "Take\nAll", TakeAllColor, TakeAll, CanTakeAll, null);
+                    takeAll = Create(panel, TakeAllName, "Take\nAll", "take-all.png", "Take all",
+                        "", TakeAllColor, TakeAll, CanTakeAll, null);
                 if (Plugin.HarvestAllButton.Value && __instance is Growing && Find(panel, HarvestAllName) == null)
-                    Create(panel, HarvestAllName, "Harvest", HarvestColor, Farming.HarvestAllOpen, Farming.CanHarvestAllOpen, takeAll);
+                    Create(panel, HarvestAllName, "Harvest", "harvest.png", "Harvest all",
+                        "", HarvestColor, Farming.HarvestAllOpen, Farming.CanHarvestAllOpen, takeAll);
             }
             catch (System.Exception e)
             {
@@ -61,10 +63,11 @@ namespace Unclicker
             return null;
         }
 
-        /// <param name="label">New button text; null keeps the copied one.</param>
+        /// <param name="label">Button text, used only if the icon can't be loaded; null keeps the copied one.</param>
+        /// <param name="icon">Our embedded icon (Icons/*.png) shown instead of the text.</param>
         /// <param name="canUse">The button is greyed out while this is false.</param>
         /// <param name="leftOf">Placed to the left of this button; null = at the slot grid's top-right corner.</param>
-        private static RectTransform Create(CraftingPanelBaseUI panel, string name, string label, Color color, UnityEngine.Events.UnityAction action,
+        private static RectTransform Create(CraftingPanelBaseUI panel, string name, string label, string icon, string tipTitle, string tipDetails, Color color, UnityEngine.Events.UnityAction action,
             System.Func<bool> canUse, RectTransform leftOf)
         {
             // The storage panel's small round Sort button; its wide Take all button if that's missing.
@@ -90,14 +93,74 @@ namespace Unclicker
             // The copy still calls the storage panel; point it at the station instead.
             button.onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
             button.onClick.AddListener(action);
-            if (label != null)
+            if (!SetIcon(copy, icon) && label != null)
                 SetLabel(copy, label);
+            AddToolTip(panel, copy, tipTitle, tipDetails);
             Paint(copy, button, color);
             LayoutElement layout = copy.GetComponent<LayoutElement>() ?? copy.AddComponent<LayoutElement>();
             layout.ignoreLayout = true;
-            copy.AddComponent<Placer>().Init((RectTransform)slots, leftOf, button, canUse, ((RectTransform)source.transform).rect.size);
+            copy.AddComponent<Placer>().Init(panel, (RectTransform)slots, leftOf, button, canUse, ((RectTransform)source.transform).rect.size);
             Plugin.Log.LogInfo($"{name} button added to {panel.name}");
             return (RectTransform)copy.transform;
+        }
+
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> icons = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>Our icon instead of the text, at 65% of the button, on top of the round background. False if it can't be loaded.</summary>
+        private static bool SetIcon(GameObject button, string file)
+        {
+            Sprite sprite = Icon(file);
+            if (sprite == null)
+                return false;
+            foreach (TMP_Text text in button.GetComponentsInChildren<TMP_Text>(true))
+                text.gameObject.SetActive(false);
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(button.transform, false);
+            // 65% of the button; the take-all arrow is 15% smaller, it looks bigger than the harvest hand at the same size.
+            float side = 0.65f * (file == "take-all.png" ? 0.85f : 1f);
+            rt.anchorMin = Vector2.one * (0.5f - side / 2f);
+            rt.anchorMax = Vector2.one * (0.5f + side / 2f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            var image = go.GetComponent<Image>();
+            image.sprite = sprite;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            return true;
+        }
+
+        private static Sprite Icon(string file)
+        {
+            if (file == null)
+                return null;
+            if (icons.TryGetValue(file, out Sprite cached) && cached != null)
+                return cached;
+            using (System.IO.Stream stream = typeof(TakeAllButton).Assembly.GetManifestResourceStream("Unclicker.Icons." + file))
+            {
+                if (stream == null)
+                {
+                    Plugin.Log.LogError($"Icon {file} is missing from the dll");
+                    return null;
+                }
+                var bytes = new byte[stream.Length];
+                stream.Read(bytes, 0, bytes.Length);
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+                if (!ImageConversion.LoadImage(tex, bytes))
+                    return null;
+                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+                sprite.name = "Unclicker " + file;
+                icons[file] = sprite;
+                return sprite;
+            }
+        }
+
+        /// <summary>The game's hover tooltip, as on the modifier icons (same hover sound).</summary>
+        private static void AddToolTip(CraftingPanelBaseUI panel, GameObject button, string title, string details)
+        {
+            ToolTipInfo tip = button.GetComponent<ToolTipInfo>() ?? button.AddComponent<ToolTipInfo>();
+            ToolTipInfo modifierTip = panel.modifiersUI?.modifierPrefab?.GetComponentInChildren<ToolTipInfo>(true);
+            tip.onPointerEnterSound = modifierTip?.onPointerEnterSound ?? new SoundInfo();
+            tip.UpdateToolTipInfo(title, details, update: false);
         }
 
         /// <summary>The round Sort button is 40 px wide: a longer label shrinks to fit instead of spilling out.</summary>
@@ -233,12 +296,14 @@ namespace Unclicker
         }
 
         /// <summary>
-        /// Keeps the button just above the top-right corner of the station's inventory, whatever the panel's layout: of the scroll
+        /// Keeps the button at the right end of the modifier strip once <see cref="ModifiersStrip"/> has moved it above the grid; otherwise
+        /// just above the top-right corner of the station's inventory, whatever the panel's layout: of the scroll
         /// area around the slot grid when there is one, so a long grid doesn't push it out of sight. Greys it out while there's
         /// nothing to do.
         /// </summary>
         private sealed class Placer : MonoBehaviour
         {
+            private CraftingPanelBaseUI panel;
             private RectTransform slots;
             private RectTransform leftOf;
             private RectTransform self;
@@ -251,8 +316,9 @@ namespace Unclicker
             private float nextCheck;
 
             /// <param name="size">The original button's size: the copy's sizeDelta was relative to the original's stretched anchors.</param>
-            public void Init(RectTransform slotPanel, RectTransform left, UnityEngine.UI.Button target, System.Func<bool> usable, Vector2 size)
+            public void Init(CraftingPanelBaseUI owner, RectTransform slotPanel, RectTransform left, UnityEngine.UI.Button target, System.Func<bool> usable, Vector2 size)
             {
+                panel = owner;
                 slots = slotPanel;
                 leftOf = left;
                 button = target;
@@ -268,6 +334,7 @@ namespace Unclicker
                 float side = Mathf.Min(size.x, size.y);
                 if (side <= 1f || side > 80f)
                     side = 40f;
+                side *= 0.9f; // a bit smaller than Sort, to sit on the modifier strip
                 self.sizeDelta = new Vector2(side, side);
                 group = gameObject.GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
             }
@@ -300,6 +367,16 @@ namespace Unclicker
                 {
                     // Same pivot (bottom-right): step left by the other button's width and a small gap.
                     self.position = leftOf.position - new Vector3((leftOf.rect.width + 6f) * leftOf.lossyScale.x, 0f, 0f);
+                    return;
+                }
+                ModifiersStrip.Ensure(panel, frame);
+                RectTransform strip = ModifiersStrip.MovedStrip(panel);
+                if (strip != null && strip.gameObject.activeInHierarchy)
+                {
+                    // On the strip above the grid: at its right end, centred on its height.
+                    strip.GetWorldCorners(corners);
+                    float middle = (corners[2].y + corners[3].y) / 2f;
+                    self.position = new Vector3(corners[2].x - 6f * self.lossyScale.x, middle - self.rect.height / 2f * self.lossyScale.y, corners[2].z);
                     return;
                 }
                 frame.GetWorldCorners(corners); // 0 bottom-left, 1 top-left, 2 top-right, 3 bottom-right

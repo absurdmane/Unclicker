@@ -25,6 +25,7 @@ namespace Unclicker
         internal static ConfigEntry<KeyCode> ModifierKey;
         internal static ConfigEntry<bool> TakeAll;
         internal static ConfigEntry<bool> HideCreateButton;
+        internal static ConfigEntry<bool> ModifiersOnTop;
         internal static ConfigEntry<bool> IngredientsFromInventory;
         internal static ConfigEntry<bool> HarvestAll;
         internal static ConfigEntry<bool> HarvestAllHint;
@@ -55,6 +56,10 @@ namespace Unclicker
                 "Hold to change the amount with the mouse wheel, and for Shift+click on growing devices.");
             TakeAll = Config.Bind("Panels", "TakeAllButton", true,
                 "A \"Take all\" button on station panels (not generators): moves everything from the station to your inventory. Needs a game restart.");
+
+            ModifiersOnTop = Config.Bind("Panels", "ModifiersAboveSlots", true,
+                "Station panels: the strip of station icons (quality, capacity, upgrades, conditions) goes above the station's slots, " +
+                "where a running craft's info doesn't cover it; Take all and Harvest sit on it. Needs a game restart.");
 
             HideCreateButton = Config.Bind("Panels", "HideCreateButton", true,
                 "Hide the Craft / Plant / Start button in the recipe info popup on stations Unclicker handles (a click on the recipe already does it). " +
@@ -133,6 +138,7 @@ namespace Unclicker
             Harmony.UnpatchSelf();
             Harmony = null;
             TakeAllButton.Unload();
+            ModifiersStrip.Unload();
             HoverInfoPatches.Unload();
             UnclickerButton.UnloadAll();
             Autoloot.Unload();
