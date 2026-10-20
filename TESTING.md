@@ -67,6 +67,18 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] Brewing barrel while processing / ready: the panel still has Abort / Fill.
 - [ ] `HideCreateButton = false`: the button is back.
 
+## 3d. Ingredients from the inventory, no slot limit
+
+- [ ] Mash barrel 100 L, ingredients (water in bottles) only in the inventory: the full 100 L batch starts; the inventory loses
+      exactly the used amounts, emptied bottles stay in the inventory as empty bottles, partly used ones keep the rest.
+- [ ] Stove, Sugarbeet juice with sugar beets and empty bottles only in the inventory: the juice ends up in bottles in the stove,
+      the inventory loses the beets and one bottle per batch.
+- [ ] Workstation craft from the inventory: one craft, the inventory shows the new amounts at once (no stale numbers).
+- [ ] Ingredients split between the station and the inventory: the station's are used first.
+- [ ] With Craft From Storage: station, then inventory, then containers; after closing and reopening the station its slot count is
+      unchanged (no extra slots), the log has no "different slot array" warning; save, load, check again.
+- [ ] Bed planting from the inventory still works (seeds move in, leftovers come back), also on Linked Planters.
+
 ## 3e. Modifier strip above the slots
 
 - [ ] Mashing tun, stove, workbench, bed, terrarium: the strip of station icons (quality, capacity, upgrades, conditions) is above

@@ -9,11 +9,11 @@ namespace Unclicker
     /// Stations we handle also use ingredients from the player's inventory.
     /// - Listing and counting: while the open station lists its recipes or counts a batch, its slots are widened with copies of the
     ///   player's stacks (station first), so recipes show and the amount counts both. Nothing is changed there.
-    /// - Starting (<c>StartGrow</c>, <c>StartProcess</c>, <c>Craft</c>, whichever button calls them): the player's stacks that fit the
-    ///   recipe move into the station, the amount is clamped to what the station really holds, and the game crafts as usual
-    ///   (quality, liquids, capacity). Then whatever the station has more of than before the move goes back to the player,
-    ///   including empty bottles left by liquid ingredients.
-    /// All three consume their ingredients right at the start, so the return can run straight after.
+    /// - Processes and workstations (<c>StartProcess</c>, <c>Craft</c>): for the start call the station's slots are widened with copies of
+    ///   the player's stacks, the game consumes from them, and the changes are written back to the player's stacks. No slot limit.
+    /// - Planting (<c>StartGrow</c>): the player's stacks that fit the recipe move into the bed, the amount is clamped to what it really
+    ///   holds, and what the bed has more of than before goes back after. Moving, not widening: Linked Planters plants its group
+    ///   from the open planter's own storage.
     /// </summary>
     [HarmonyPatch]
     internal static class InventoryIngredients
@@ -60,7 +60,7 @@ namespace Unclicker
         /// <summary>Puts copies of the player's stacks after the station's own; returns the original array, or null if nothing changed.</summary>
         private static StorageSlot[] Widen(CraftingBase station)
         {
-            if (pulling || !Applies(station))
+            if (pulling || session != null || !Applies(station))
                 return null;
             StorageSlot[] own = station.InputOutputStorage.storageSlots;
             // The same array while the player's stacks are the same (a recipe list runs dozens of checks): Craft From Storage
@@ -151,12 +151,19 @@ namespace Unclicker
         [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow))]
         private static void StartGrowFinalizer(Growing __instance, Pull __state) => PutBack(__instance, __state);
 
+        // Processes and workstations consume straight from the player's stacks: a barrel's few slots can't hold 100 L of water in
+        // bottles, so moving the ingredients in first cut the batch to what fitted. For the start call only, the station's slots are
+        // widened with copies of the player's stacks; the game removes from them in place (amount, emptied stack, bottle -> empty
+        // bottle, liquid left), and the changes are written back to the player's real stacks after. Same nesting rule as listing:
+        // our prefix first, our finalizer last, and the station always gets its own array back.
+
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(manufacturingProcess), nameof(manufacturingProcess.StartProcess))]
-        private static void StartProcessPrefix(manufacturingProcess __instance, out Pull __state)
+        private static void StartProcessPrefix(manufacturingProcess __instance, out Session __state)
         {
             Recipe recipe = __instance.ActiveRecipe.Key;
-            __state = PullIn(__instance, recipe);
+            __state = recipe == null ? null : Begin(__instance);
             if (__state != null)
             {
                 int max = __instance.GetRecipeMultiplierShowValue(recipe);
@@ -165,16 +172,117 @@ namespace Unclicker
         }
 
         [HarmonyFinalizer]
+        [HarmonyPriority(Priority.Last)]
         [HarmonyPatch(typeof(manufacturingProcess), nameof(manufacturingProcess.StartProcess))]
-        private static void StartProcessFinalizer(manufacturingProcess __instance, Pull __state) => PutBack(__instance, __state);
+        private static void StartProcessFinalizer(Session __state) => End(__state);
 
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(manufacturing), nameof(manufacturing.Craft))]
-        private static void CraftPrefix(manufacturing __instance, out Pull __state) => __state = PullIn(__instance, __instance.selectedRecipe);
+        private static void CraftPrefix(manufacturing __instance, out Session __state) =>
+            __state = __instance.selectedRecipe == null ? null : Begin(__instance);
 
         [HarmonyFinalizer]
+        [HarmonyPriority(Priority.Last)]
         [HarmonyPatch(typeof(manufacturing), nameof(manufacturing.Craft))]
-        private static void CraftFinalizer(manufacturing __instance, Pull __state) => PutBack(__instance, __state);
+        private static void CraftFinalizer(Session __state) => End(__state);
+
+        private sealed class Session
+        {
+            public CraftingBase Station;
+            public StorageSlot[] Own;
+            public StorageSlot[] Widened;
+            public List<Link> Links;
+        }
+
+        private sealed class Link
+        {
+            public ItemStack Real;
+            public StorageSlot Copy;
+            public int Id;
+            public int Amount;
+            public object[] Meta;
+        }
+
+        private static Session session;
+
+        private static Session Begin(CraftingBase station)
+        {
+            if (session != null || pulling || !Applies(station))
+                return null;
+            List<Link> links = PlayerSlots().Select(s => new Link
+            {
+                Real = s.itemStack,
+                Copy = Copy(s.itemStack),
+                Id = s.itemStack.itemId,
+                Amount = s.itemStack.itemAmount,
+                Meta = s.itemStack._meta
+            }).ToList();
+            if (links.Count == 0)
+                return null;
+            ForgetWidened();
+            Storage storage = station.InputOutputStorage;
+            session = new Session { Station = station, Own = storage.storageSlots, Links = links };
+            session.Widened = session.Own.Concat(links.Select(l => l.Copy)).ToArray();
+            storage.storageSlots = session.Widened;
+            return session;
+        }
+
+        private static void End(Session s)
+        {
+            if (s == null)
+                return;
+            session = null;
+            Storage storage = s.Station.InputOutputStorage;
+            try
+            {
+                foreach (Link link in s.Links)
+                    WriteBack(link);
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogError($"Writing used ingredients back to the inventory failed: {e}");
+            }
+            finally
+            {
+                if (storage.storageSlots != s.Widened)
+                    Plugin.Log.LogWarning("Another mod left a different slot array on the station after the start; the station's own slots are restored.");
+                storage.storageSlots = s.Own;
+                ForgetWidened();
+            }
+            try
+            {
+                Inventory.instance.UpdateAllSlotsNow();
+                s.Station.CheckItems(force: true);
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogError($"Refreshing after the start failed: {e}");
+            }
+        }
+
+        /// <summary>Copies what the game did to the copy onto the player's stack. Liquid meta is shared, so its changes are there already.</summary>
+        private static void WriteBack(Link link)
+        {
+            StorageSlot copy = link.Copy;
+            ItemStack real = link.Real;
+            if (copy.itemId == link.Id && copy.itemAmount == link.Amount && ReferenceEquals(copy._meta, link.Meta))
+                return;
+            if (copy.IsEmpty())
+            {
+                real.RemoveStack(); // fires the slot's OnTaken, as a removal from the inventory would
+                return;
+            }
+            if (real.itemId != copy.itemId)
+            {
+                real.itemId = copy.itemId;
+                real.itemReference = new ItemReference(ItemDatabase.instance.FetchItemByID(copy.itemId)); // the game changes only the id (bottle -> empty bottle)
+            }
+            real.itemAmount = copy.itemAmount;
+            real._meta = copy._meta;
+            real._metaset = copy._metaset;
+            real.ownerId = copy.ownerId;
+        }
 
         /// <summary>Moves the player's stacks that fit the recipe into the station. Null when nothing moved.</summary>
         private static Pull PullIn(CraftingBase station, Recipe recipe)
