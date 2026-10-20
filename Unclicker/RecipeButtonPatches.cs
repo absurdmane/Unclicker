@@ -12,6 +12,20 @@ namespace Unclicker
         private const string InventoryTweaksGuid = "lomserman.obenseuer.inventorytweaks";
         private static bool inventoryTweaksChecked;
 
+        /// <summary>
+        /// A recipe whose conditions the station doesn't meet (required / excluded modifiers) gets the vanilla "can't make" button.
+        /// Vanilla lists it as a normal button and only greys out the popup's create button, which we hide.
+        /// </summary>
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(RecipeListUI), nameof(RecipeListUI.CreateButton))]
+        private static void CreateButtonPrefix(Recipe recipe, CraftingBase activeCraftingBase, bool disabled, ref bool missingIngredients)
+        {
+            if (disabled || missingIngredients || recipe == null || Stations.KindOf(activeCraftingBase) == StationKind.None)
+                return;
+            if (!RecipeInfoUI.CheckModifiers(recipe, activeCraftingBase.ModifiersWithUpgrades))
+                missingIngredients = true;
+        }
+
         /// <summary>Every recipe button of a station we handle gets hover info and an <see cref="UnclickerButton"/>.</summary>
         [HarmonyPostfix]
         [HarmonyPatch(typeof(RecipeListUI), nameof(RecipeListUI.CreateButton))]

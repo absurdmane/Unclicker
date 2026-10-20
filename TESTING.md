@@ -31,6 +31,8 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] With exactly one free slot, Shift + click plants at once (vanilla behaviour).
 - [ ] Bed full (0 free slots): no amount, click does nothing, no error.
 - [ ] Recipe with missing ingredients / skill too low (red/grey button): click does nothing, hover still shows info.
+- [ ] Recipe whose conditions the device doesn't meet (red required / excluded modifiers in the hover info): the button looks
+      like "missing ingredients", no amount, click does nothing.
 - [ ] Right click on a button: vanilla behaviour, no planting.
 - [ ] A bed with `ManualHarvest` (world-harvest bed) and a terrarium both work the same.
 
