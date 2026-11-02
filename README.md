@@ -73,7 +73,6 @@ the button, ingredients come straight from your inventory, one button empties a 
 | | `Overflow` | `StopWhenFull` | `StopWhenFull` (take what fits, the rest stays on the plants) / `DropRest` (drop what doesn't fit) |
 | | `CellHarvestToPlayer` | `true` | a click on a plant cell harvests into your inventory |
 | | `PlantingOrder` | `WorstFirst` | `WorstFirst` / `Vanilla` (slot order) |
-| | `InstantDeadRemoval` | `true` | dead plants go with a press |
 | Autoloot | `Enabled` | `true` | middle click marks items, containers outside the tenement hand them over |
 | | `MarkKey` | `Mouse2` | the key that marks items (middle mouse button) |
 | | `Items` | empty | the marked item IDs, filled by middle clicks |

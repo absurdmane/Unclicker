@@ -12,7 +12,7 @@ namespace Unclicker
     {
         public const string Guid = "obenseuer.absurdmane.unclicker";
         public const string Name = "Unclicker";
-        public const string Version = "1.5.0";
+        public const string Version = "1.5.1";
 
         internal static Plugin Instance;
         internal static ManualLogSource Log;

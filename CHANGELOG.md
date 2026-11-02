@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1
+
+- Fixed: the mod works again on the latest game update. It failed to load there, so autoloot marking and Harvest all did nothing.
+- Planting from your inventory now relies on the game's own feature.
+- Removed the `InstantDeadRemoval` setting: the game now removes dead plants with a press by itself.
+- Harvest all plays the game's fruit picking animation.
+
 ## 1.5.0
 
 - New: the icon strip on station panels (quality, capacity, upgrades, conditions) sits above the slots, where a running craft's info popup no longer covers it. Setting `[Panels] ModifiersAboveSlots`.
