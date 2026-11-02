@@ -20,7 +20,7 @@ namespace Unclicker
 
     /// <summary>
     /// Farming: harvest all (Shift + interact on a growing device, or the panel's Harvest all button), harvest from the panel's plant
-    /// cells into the player's inventory, worst items planted first, dead plants removed with a press instead of a hold.
+    /// cells into the player's inventory, worst items planted first.
     /// </summary>
     [HarmonyPatch]
     internal static class Farming
@@ -149,6 +149,7 @@ namespace Unclicker
                     continue;
                 }
                 fruit.GetItem();
+                fruit.PlayHarvestAnimation();
                 fruit.ToggleVisibility(vis: false);
                 fruit.ResetGrow();
                 picked++;
@@ -298,60 +299,37 @@ namespace Unclicker
 
         // ---- worst first ----
 
-        private sealed class Order
-        {
-            public Storage Storage;
-            public StorageSlot[] Original;
-        }
-
         /// <summary>
-        /// <c>RemoveItems</c> takes the recipe's input in slot order, so the slots are sorted worst first while the planting runs
-        /// (quality, then freshness, ascending) and put back after. After <see cref="InventoryIngredients"/> moves the player's
-        /// items in, before Linked Terrariums plants across its group (each member's own <c>StartGrow</c> sorts its storage again).
+        /// <c>RemoveItems</c> takes the recipe's input in the order of <c>InputSlots</c> (the bed's slots, then the player's while the
+        /// panel is open), so for the planting call that list is sorted worst first (quality, then freshness, ascending). The sorted
+        /// array goes into the game's per-frame cache of <c>InputSlots</c>: same stacks, other order; the cache is dropped after.
+        /// Only the panel's planting (<c>StartGrow(int)</c>); the game's quick plant picks its stack itself.
         /// </summary>
         [HarmonyPrefix]
         [HarmonyPriority(Priority.VeryHigh)]
-        [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow))]
-        private static void StartGrowPrefix(Growing __instance, out Order __state)
+        [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow), typeof(int))]
+        private static void StartGrowPrefix(Growing __instance, out bool __state)
         {
-            __state = null;
-            Storage storage = __instance.InputOutputStorage;
-            if (Plugin.PlantOrder.Value != PlantingOrder.WorstFirst || storage == null || storage.storageSlots == null || storage.storageSlots.Length < 2)
+            __state = false;
+            if (Plugin.PlantOrder.Value != PlantingOrder.WorstFirst || __instance.InputOutputStorage?.storageSlots == null)
                 return;
-            __state = new Order { Storage = storage, Original = storage.storageSlots };
-            storage.storageSlots = storage.storageSlots
+            ItemStack[] slots = __instance.InputSlots;
+            if (slots == null || slots.Length < 2)
+                return;
+            __instance.inputSlots = slots
                 .OrderBy(s => s.GetMetaOfType<ItemQualityData>()?.quality ?? 1f)
                 .ThenBy(s => s.GetMetaOfType<ItemPerishabledata>()?.integrity ?? 1f)
                 .ToArray();
+            __instance.inputSlotsFrame = Time.frameCount;
+            __state = true;
         }
 
         [HarmonyFinalizer]
-        [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow))]
-        private static void StartGrowFinalizer(Order __state)
+        [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow), typeof(int))]
+        private static void StartGrowFinalizer(Growing __instance, bool __state)
         {
-            if (__state != null)
-                __state.Storage.storageSlots = __state.Original;
-        }
-
-        // ---- dead plants ----
-
-        /// <summary>A dead plant goes with a press; uprooting a live one stays a hold, against misclicks.</summary>
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(grow), nameof(grow.Interact))]
-        private static bool PlantInteractPrefix(grow __instance)
-        {
-            if (!Plugin.InstantDeadRemoval.Value || __instance.growSpoil == null || !__instance.growSpoil.spoiled || !__instance.Uproot())
-                return true;
-            __instance.Harvest();
-            return false;
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(grow), "GetUseMessage")]
-        private static void PlantUseMessagePostfix(ref string __result)
-        {
-            if (Plugin.InstantDeadRemoval.Value && __result == "Hold press to uproot dead plant")
-                __result = "Uproot dead plant";
+            if (__state)
+                __instance.ClearInputSlotsCache();
         }
     }
 }

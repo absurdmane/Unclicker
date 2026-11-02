@@ -8,6 +8,9 @@ Mark each line: OK / FAIL + a note. "Shift" below means the configured `Modifier
 
 ## 0. Startup
 
+- [ ] Game 0.5.13: the log has `Unclicker ... loaded` and no Harmony error ("Ambiguous match" for `StartGrow`); middle click
+      marks an item for autoloot (star appears).
+
 - [ ] The game starts, the log has `Unclicker 1.3.0 loaded`, no errors.
 - [ ] The config file exists, with `Stations` (Growing, Manufacturing, ManufacturingProcess) and `Controls` (ModifierKey).
 
@@ -78,7 +81,8 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
 - [ ] Ingredients split between the station and the inventory: the station's are used first.
 - [ ] With Craft From Storage: station, then inventory, then containers; after closing and reopening the station its slot count is
       unchanged (no extra slots), the log has no "different slot array" warning; save, load, check again.
-- [ ] Bed planting from the inventory still works (seeds move in, leftovers come back), also on Linked Planters.
+- [ ] Bed planting from the inventory (game 0.5.13 does it itself): seeds only in the inventory, click: planted, the inventory
+      loses exactly the used seeds; the bed's storage gets nothing from the inventory.
 
 ## 3e. Modifier strip above the slots
 
@@ -149,8 +153,11 @@ Put seeds (and some produce) into the bed's inventory, leave several slots free.
       doesn't merge, note where the rest went (floor / bed storage).
 - [ ] Harvest button (round, smaller text that fits): left of Take All, harvests the panel's device; on Linked Planters the whole group.
 - [ ] Click on a plant cell: harvest goes to the inventory; with a full inventory into the terrarium's storage.
-- [ ] Worst first: mixed-quality seeds/produce in a bed and the inventory, plant: the worst are used, the best stay.
-- [ ] Dead plant: a press removes it, the hint says "Uproot dead plant"; a live unripe plant still needs a hold.
+- [ ] Worst first: mixed-quality seeds/produce in a bed and the inventory, plant: the worst are used, the best stay (also when
+      the worst are in the inventory and the best in the bed).
+- [ ] Game 0.5.13 quick plant (scroll wheel on a bed, Primary Use) and hold-to-repeat harvest still work as in vanilla.
+- [ ] Shift+E harvest all and the panel's Harvest all: fruit plays the game's pick animation; ripe and dead plants vanish from
+      the bed, no leftover model, no error.
 - [ ] Animal cages (also Growing): Shift + E feels right or needs excluding.
 ## Autoloot
 

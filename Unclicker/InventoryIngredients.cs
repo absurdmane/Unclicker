@@ -11,21 +11,18 @@ namespace Unclicker
     ///   player's stacks (station first), so recipes show and the amount counts both. Nothing is changed there.
     /// - Processes and workstations (<c>StartProcess</c>, <c>Craft</c>): for the start call the station's slots are widened with copies of
     ///   the player's stacks, the game consumes from them, and the changes are written back to the player's stacks. No slot limit.
-    /// - Planting (<c>StartGrow</c>): the player's stacks that fit the recipe move into the bed, the amount is clamped to what it really
-    ///   holds, and what the bed has more of than before goes back after. Moving, not widening: Linked Planters plants its group
-    ///   from the open planter's own storage.
+    /// - Growing devices: not touched. Since 0.5.13 the game itself adds the player's slots to their input while the panel is open
+    ///   (<c>Growing.ExtraInputSlots</c>).
     /// </summary>
     [HarmonyPatch]
     internal static class InventoryIngredients
     {
-        private static bool pulling;
-
         /// <remarks>
-        /// Only while the station holds its own storage: Linked Terrariums briefly swaps in a neighbour's storage to count and plant
-        /// from it, and the player's stacks must not be counted or pulled once per neighbour.
+        /// Only while the station holds its own storage: another mod may briefly swap in a neighbour's storage, and the player's stacks
+        /// must not be counted once per neighbour.
         /// </remarks>
         private static bool Applies(CraftingBase station) =>
-            Plugin.IngredientsFromInventory.Value && station != null && station == CraftingBase.currentCraftingBase &&
+            Plugin.IngredientsFromInventory.Value && station != null && station == CraftingBase.currentCraftingBase && !(station is Growing) &&
             Stations.KindOf(station) != StationKind.None && station.InputOutputStorage != null && Inventory.instance != null &&
             station.InputOutputStorage == station.GetComponent<Storage>();
 
@@ -60,7 +57,7 @@ namespace Unclicker
         /// <summary>Puts copies of the player's stacks after the station's own; returns the original array, or null if nothing changed.</summary>
         private static StorageSlot[] Widen(CraftingBase station)
         {
-            if (pulling || session != null || !Applies(station))
+            if (session != null || !Applies(station))
                 return null;
             StorageSlot[] own = station.InputOutputStorage.storageSlots;
             // The same array while the player's stacks are the same (a recipe list runs dozens of checks): Craft From Storage
@@ -127,30 +124,6 @@ namespace Unclicker
 
         // ---- starting ----
 
-        private sealed class Pull
-        {
-            public Dictionary<int, int> Before;
-        }
-
-        /// <remarks>First, so the seeds are in before Linked Terrariums' prefix plants across its group.</remarks>
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow))]
-        private static void StartGrowPrefix(Growing __instance, ref int amount, out Pull __state)
-        {
-            __state = PullIn(__instance, __instance.selectedRecipe);
-            if (__state == null)
-                return;
-            int max = LinkedTerrariums.IsLinked(__instance)
-                ? LinkedTerrariums.Max(__instance.selectedRecipe)
-                : System.Math.Min(__instance.GetRecipeMultiplier(__instance.selectedRecipe), __instance.FreeGrowingSlotCount());
-            amount = System.Math.Max(1, System.Math.Min(amount, max));
-        }
-
-        [HarmonyFinalizer]
-        [HarmonyPatch(typeof(Growing), nameof(Growing.StartGrow))]
-        private static void StartGrowFinalizer(Growing __instance, Pull __state) => PutBack(__instance, __state);
-
         // Processes and workstations consume straight from the player's stacks: a barrel's few slots can't hold 100 L of water in
         // bottles, so moving the ingredients in first cut the batch to what fitted. For the start call only, the station's slots are
         // widened with copies of the player's stacks; the game removes from them in place (amount, emptied stack, bottle -> empty
@@ -208,7 +181,7 @@ namespace Unclicker
 
         private static Session Begin(CraftingBase station)
         {
-            if (session != null || pulling || !Applies(station))
+            if (session != null || !Applies(station))
                 return null;
             List<Link> links = PlayerSlots().Select(s => new Link
             {
@@ -282,101 +255,6 @@ namespace Unclicker
             real._meta = copy._meta;
             real._metaset = copy._metaset;
             real.ownerId = copy.ownerId;
-        }
-
-        /// <summary>Moves the player's stacks that fit the recipe into the station. Null when nothing moved.</summary>
-        private static Pull PullIn(CraftingBase station, Recipe recipe)
-        {
-            // Nested start (Linked Terrariums plants each member through its own StartGrow): the outer call already pulled.
-            if (pulling || recipe == null || !Applies(station))
-                return null;
-            SlotController[] stationSlots = station.InputOutputStorage.Slots;
-            if (stationSlots == null || stationSlots.Length == 0)
-                return null;
-
-            ForgetWidened();
-            var pull = new Pull { Before = Count(station) };
-            int moved = 0;
-            foreach (SlotController slot in PlayerSlots().Where(s => Fits(recipe, s.itemStack)).ToList())
-            {
-                slot.MoveToOtherInventory(stationSlots[0], slot.itemStack.itemAmount, out int n);
-                moved += n;
-            }
-            if (moved == 0)
-                return null;
-            pulling = true; // the game's own checks inside the start see the station as it really is now
-            return pull;
-        }
-
-        private static void PutBack(CraftingBase station, Pull pull)
-        {
-            if (pull == null)
-                return;
-            pulling = false;
-            ForgetWidened();
-            try
-            {
-                Dictionary<int, int> now = Count(station);
-                SlotController[] slots = station.InputOutputStorage.Slots;
-                foreach (KeyValuePair<int, int> kv in now)
-                {
-                    pull.Before.TryGetValue(kv.Key, out int before);
-                    int excess = kv.Value - before;
-                    for (int i = slots.Length - 1; i >= 0 && excess > 0; i--)
-                    {
-                        ItemStack stack = slots[i].itemStack;
-                        if (stack == null || stack.itemId != kv.Key || stack.itemAmount <= 0)
-                            continue;
-                        slots[i].MoveToInventory(out int n, System.Math.Min(excess, stack.itemAmount));
-                        if (n == 0)
-                            break; // the player's inventory is full: the rest stays in the station
-                        excess -= n;
-                    }
-                }
-                station.CheckItems(force: true);
-            }
-            catch (System.Exception e)
-            {
-                Plugin.Log.LogError($"Returning ingredients failed: {e}");
-            }
-        }
-
-        private static Dictionary<int, int> Count(CraftingBase station)
-        {
-            var counts = new Dictionary<int, int>();
-            foreach (SlotController s in station.InputOutputStorage.Slots)
-            {
-                ItemStack stack = s?.itemStack;
-                if (stack == null || stack.itemId < 0 || stack.itemAmount <= 0)
-                    continue;
-                counts.TryGetValue(stack.itemId, out int c);
-                counts[stack.itemId] = c + stack.itemAmount;
-            }
-            return counts;
-        }
-
-        /// <summary>The same matching as <c>CraftingBase.RemoveItems</c>: the item itself, a member of an item group, or a liquid in a container.</summary>
-        private static bool Fits(Recipe recipe, ItemStack stack)
-        {
-            if (recipe.Input == null)
-                return false;
-            int liquidId = stack.GetMetaOfType<ItemLiquidData>()?.liquidItem?.ID ?? -1;
-            foreach (Item required in recipe.Input.Keys)
-            {
-                if (required == null)
-                    continue;
-                ItemGroupData group = required.GetMetaOfType<ItemGroupData>();
-                if (group != null)
-                {
-                    if (group.itemGroup.Any(g => g?.item != null && (g.item.ID == stack.itemId || g.item.ID == liquidId)))
-                        return true;
-                }
-                else if (required.ID == stack.itemId || required.ID == liquidId)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }

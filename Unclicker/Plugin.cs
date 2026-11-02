@@ -34,7 +34,6 @@ namespace Unclicker
         internal static ConfigEntry<HarvestOverflow> Overflow;
         internal static ConfigEntry<bool> CellHarvestToPlayer;
         internal static ConfigEntry<PlantingOrder> PlantOrder;
-        internal static ConfigEntry<bool> InstantDeadRemoval;
         internal static ConfigEntry<bool> AutolootEnabled;
         internal static ConfigEntry<string> AutolootItems;
         internal static ConfigEntry<KeyCode> AutolootKey;
@@ -66,8 +65,8 @@ namespace Unclicker
                 "Its in-progress bar (e.g. Craft 2/3) goes with it.");
 
             IngredientsFromInventory = Config.Bind("Ingredients", "FromInventory", true,
-                "Stations Unclicker handles also use ingredients from your inventory: recipes and amounts count them, and on start they move " +
-                "into the station; what's left over (and empty bottles) comes back to you.");
+                "Stations Unclicker handles also use ingredients from your inventory: recipes and amounts count them, and the start uses " +
+                "them straight from your inventory (empty bottles stay with you). Growing devices do this in the game itself.");
 
             HarvestAll = Config.Bind("Farming", "HarvestAll", true,
                 "ModifierKey + interact on a bed, terrarium or other growing device harvests every ripe plant into your inventory. " +
@@ -86,8 +85,6 @@ namespace Unclicker
                 "A click on a plant cell in the growing panel puts the harvest into your inventory when it fits (vanilla: into the device's storage).");
             PlantOrder = Config.Bind("Farming", "PlantingOrder", PlantingOrder.WorstFirst,
                 "Which items planting uses up. WorstFirst: lowest quality first, then the least fresh, so the good ones stay. Vanilla: slot order.");
-            InstantDeadRemoval = Config.Bind("Farming", "InstantDeadRemoval", true,
-                "A dead plant is removed with a press instead of a hold. Uprooting a live plant stays a hold.");
 
             AutolootEnabled = Config.Bind("Autoloot", "Enabled", true,
                 "MarkKey on an item in an inventory panel adds its kind to the autoloot list (again: removes it). Opening a container " +
